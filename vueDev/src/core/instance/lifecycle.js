@@ -138,6 +138,10 @@ export function lifecycleMixin (Vue: Class<Component>) {
   }
 }
 
+// 代码逻辑： 先调用vm._render方法先成虚拟Node， 再实例化一个渲染 Watcher
+// 核心方法： vm._render 和 vm._update
+// Watcher的作用：
+// 1.是初始化的时候会执行回调函数  2.vm 实例中的监测的数据发生变化的时候执行回调函数
 export function mountComponent (
   vm: Component,
   el: ?Element,
@@ -202,6 +206,7 @@ export function mountComponent (
     }
   }, true /* isRenderWatcher */)
   hydrating = false
+
 
   // manually mounted instance, call mounted on self
   // mounted is called for render-created child components in its inserted hook

@@ -15,6 +15,10 @@ import VNode, { createEmptyVNode } from '../vdom/vnode'
 
 import { isUpdatingChildComponent } from './lifecycle'
 
+
+//添加 vm._c 和 vm.$createElement 方法
+//vm._c:  是被模板编译成的 render 函数使用
+//vm.$createElement:  是用户手写 render 方法使用的
 export function initRender (vm: Component) {
   vm._vnode = null // the root of the child tree
   vm._staticTrees = null // v-once cached trees
@@ -50,6 +54,8 @@ export function initRender (vm: Component) {
   }
 }
 
+//添加prototype._render方法
+//代码逻辑：手写 render 方法法的调用
 export function renderMixin (Vue: Class<Component>) {
   // install runtime convenience helpers
   installRenderHelpers(Vue.prototype)
@@ -72,6 +78,7 @@ export function renderMixin (Vue: Class<Component>) {
     // render self
     let vnode
     try {
+      //手写 render 方法法的调用
       vnode = render.call(vm._renderProxy, vm.$createElement)
     } catch (e) {
       handleError(e, vm, `render`)

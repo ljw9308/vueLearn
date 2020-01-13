@@ -11,9 +11,10 @@ function Vue (options) {
   ) {
     warn('Vue is a constructor and should be called with the `new` keyword')
   }
-  
-  //合并配置，初始化生命周期，初始化事件中心，初始化渲染，初始化 data、props、computed、watcher 等等
-  //Vue 实例挂载的实现
+
+  //代码逻辑：合并配置，初始化生命周期，初始化事件中心，初始化渲染，初始化 data、props、computed、watcher 等等
+  //最后调用$mount方法，Vue 实例挂载的实现
+  //生命周期  beforeCreate，created
   this._init(options)
 }
 
@@ -26,11 +27,10 @@ Vue按功能把这些扩展分散到多个模块中去实现，而不是在一�
 */
 
 //Vue构造函数的原型属性prototype添加方法
-//init, 状态， 事件，生命周期，渲染
-initMixin(Vue)
+initMixin(Vue)   //添加prototype._init私有方法
 stateMixin(Vue)
 eventsMixin(Vue)
 lifecycleMixin(Vue)
-renderMixin(Vue)
+renderMixin(Vue)  //添加prototype._render私有方法
 
 export default Vue

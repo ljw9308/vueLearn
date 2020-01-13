@@ -1,6 +1,6 @@
 /*!
  * Vue.js v2.5.21
- * (c) 2014-2019 Evan You
+ * (c) 2014-2020 Evan You
  * Released under the MIT License.
  */
 (function (global, factory) {
@@ -2839,6 +2839,10 @@
     };
   }
 
+  // 代码逻辑： 先调用vm._render方法先成虚拟Node， 再实例化一个渲染 Watcher
+  // 核心方法： vm._render 和 vm._update
+  // Watcher的作用：
+  // 1.是初始化的时候会执行回调函数  2.vm 实例中的监测的数据发生变化的时候执行回调函数
   function mountComponent (
     vm,
     el,
@@ -2903,6 +2907,7 @@
       }
     }, true /* isRenderWatcher */);
     hydrating = false;
+
 
     // manually mounted instance, call mounted on self
     // mounted is called for render-created child components in its inserted hook
@@ -4440,6 +4445,7 @@
 
   // wrapper function for providing a more flexible interface
   // without getting yelled at by flow
+  // createElement 方法创建 VNode
   function createElement (
     context,
     tag,
@@ -4460,11 +4466,11 @@
   }
 
   function _createElement (
-    context,
-    tag,
-    data,
-    children,
-    normalizationType
+    context,  //表示 VNode 的上下文环境。它是 Component 类型
+    tag,    //标签，字符串，Component，
+    data,  //VNode 的数据
+    children,    //当前 VNode 的子节点
+    normalizationType   //主要参考 render 函数，false 是编译模板生成的，true是用户编写的render函数。
   ) {
     if (isDef(data) && isDef((data).__ob__)) {
       warn(
@@ -4501,9 +4507,12 @@
       data.scopedSlots = { default: children[0] };
       children.length = 0;
     }
+    //children 的规范化，children 变成了一个类型为 VNode 的 Array
+    //render 函数是用户编写的
     if (normalizationType === ALWAYS_NORMALIZE) {
       children = normalizeChildren(children);
     } else if (normalizationType === SIMPLE_NORMALIZE) {
+    //render 函数是由模板编译生成的
       children = simpleNormalizeChildren(children);
     }
     var vnode, ns;
@@ -4575,6 +4584,10 @@
 
   /*  */
 
+
+  //添加 vm._c 和 vm.$createElement 方法
+  //vm._c:  是被模板编译成的 render 函数使用
+  //vm.$createElement:  是用户手写 render 方法使用的
   function initRender (vm) {
     vm._vnode = null; // the root of the child tree
     vm._staticTrees = null; // v-once cached trees
@@ -4607,6 +4620,8 @@
     }
   }
 
+  //添加prototype._render方法
+  //代码逻辑：手写 render 方法法的调用
   function renderMixin (Vue) {
     // install runtime convenience helpers
     installRenderHelpers(Vue.prototype);
@@ -4631,6 +4646,7 @@
       // render self
       var vnode;
       try {
+        //手写 render 方法法的调用
         vnode = render.call(vm._renderProxy, vm.$createElement);
       } catch (e) {
         handleError(e, vm, "render");
@@ -4707,8 +4723,9 @@
       vm._self = vm;
       initLifecycle(vm);  //初始化生命周期
       initEvents(vm);     //初始化事件中心
-      initRender(vm);     //初始化渲染
-      callHook(vm, 'beforeCreate');  
+      initRender(vm);     //初始化渲染方法    添加 vm._c 和 vm.$createElement 方法
+      callHook(vm, 'beforeCreate');
+
       //初始化 data、props、computed、watcher 等等
       initInjections(vm); // resolve injections before data/props
       initState(vm);
@@ -4809,9 +4826,10 @@
     ) {
       warn('Vue is a constructor and should be called with the `new` keyword');
     }
-    
-    //合并配置，初始化生命周期，初始化事件中心，初始化渲染，初始化 data、props、computed、watcher 等等
-    //Vue 实例挂载的实现
+
+    //代码逻辑：合并配置，初始化生命周期，初始化事件中心，初始化渲染，初始化 data、props、computed、watcher 等等
+    //最后调用$mount方法，Vue 实例挂载的实现
+    //生命周期  beforeCreate，created
     this._init(options);
   }
 
@@ -4824,12 +4842,11 @@
   */
 
   //Vue构造函数的原型属性prototype添加方法
-  //init, 状态， 事件，生命周期，渲染
-  initMixin(Vue);
+  initMixin(Vue);   //添加prototype._init私有方法
   stateMixin(Vue);
   eventsMixin(Vue);
   lifecycleMixin(Vue);
-  renderMixin(Vue);
+  renderMixin(Vue);  //添加prototype._render私有方法
 
   /*  */
 
@@ -5166,6 +5183,7 @@
     initAssetRegisters(Vue);
   }
 
+  //全局API(Vue 官网中的全局 API)
   initGlobalAPI(Vue);
 
   Object.defineProperty(Vue.prototype, '$isServer', {
@@ -8641,6 +8659,8 @@
   Vue.prototype.__patch__ = inBrowser ? patch : noop;
 
   // public mount method
+  // 原先原型上定义的 $mount 方法
+  // 代码逻辑： 先调用vm._render方法先成虚拟Node， 再实例化一个渲染 Watcher
   Vue.prototype.$mount = function (
     el,
     hydrating
@@ -10985,16 +11005,20 @@
     return el && el.innerHTML
   });
 
-  // ./runtime/index  文件中定义的
   //先缓存了原型上的 $mount 方法，再重新定义该方法
   //目的：这么设计完全是为了复用，因为它是可以被 runtime only 版本的 Vue 直接使用的
+
+  //代码逻辑：如果没有定义 render 方法，则会把 el 或者 template 字符串转换成 render 方法。
+  //compileToFunctions 是 Vue 的模板“在线编译”的过程
+  //调用原先原型上的 $mount 方法挂载。
+
   var mount = Vue.prototype.$mount;
   Vue.prototype.$mount = function (
     el,
     hydrating
   ) {
     el = el && query(el);
-    /*提供的元素只能作为挂载点,不推荐挂载 root 实例到 <html> 或者 <body> 上*/
+
     /* istanbul ignore if */
     if (el === document.body || el === document.documentElement) {
       warn(
@@ -11005,10 +11029,10 @@
 
     var options = this.$options;
     // resolve template/el and convert to render function
+    //没有定义 render 方法
     if (!options.render) {
       var template = options.template;
       if (template) {
-      	/*如果 render 函数不存在，字符串模将会 替换 挂载的元素，挂载元素的内容都将被忽略，除非模板的内容有分发插槽。*/
         if (typeof template === 'string') {
           if (template.charAt(0) === '#') {
             template = idToTemplate(template);
@@ -11029,7 +11053,6 @@
           return this
         }
       } else if (el) {
-      	/*如果 render 函数和 template 属性都不存在，挂载 DOM 元素的 HTML 会被提取出来用作模板*/
         template = getOuterHTML(el);
       }
       if (template) {
@@ -11037,7 +11060,7 @@
         if (config.performance && mark) {
           mark('compile');
         }
-
+        //compileToFunctions是 Vue 的模板“在线编译”的过程
         var ref = compileToFunctions(template, {
           shouldDecodeNewlines: shouldDecodeNewlines,
           shouldDecodeNewlinesForHref: shouldDecodeNewlinesForHref,
@@ -11046,6 +11069,7 @@
         }, this);
         var render = ref.render;
         var staticRenderFns = ref.staticRenderFns;
+        //会转换成 render 方法
         options.render = render;
         options.staticRenderFns = staticRenderFns;
 
@@ -11056,6 +11080,8 @@
         }
       }
     }
+
+    //调用原先原型上的 $mount 方法挂载。
     return mount.call(this, el, hydrating)
   };
 

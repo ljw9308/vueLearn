@@ -34,6 +34,8 @@ extend(Vue.options.components, platformComponents)
 Vue.prototype.__patch__ = inBrowser ? patch : noop
 
 // public mount method
+// 原先原型上定义的 $mount 方法
+// 代码逻辑： 先调用vm._render方法先成虚拟Node， 再实例化一个渲染 Watcher
 Vue.prototype.$mount = function (
   el?: string | Element,
   hydrating?: boolean

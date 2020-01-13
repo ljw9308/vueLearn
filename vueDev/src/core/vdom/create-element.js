@@ -25,6 +25,7 @@ const ALWAYS_NORMALIZE = 2
 
 // wrapper function for providing a more flexible interface
 // without getting yelled at by flow
+// createElement 方法创建 VNode
 export function createElement (
   context: Component,
   tag: any,
@@ -45,11 +46,11 @@ export function createElement (
 }
 
 export function _createElement (
-  context: Component,
-  tag?: string | Class<Component> | Function | Object,
-  data?: VNodeData,
-  children?: any,
-  normalizationType?: number
+  context: Component,  //表示 VNode 的上下文环境。它是 Component 类型
+  tag?: string | Class<Component> | Function | Object,    //标签，字符串，Component，
+  data?: VNodeData,  //VNode 的数据
+  children?: any,    //当前 VNode 的子节点
+  normalizationType?: number   //主要参考 render 函数，false 是编译模板生成的，true是用户编写的render函数。
 ): VNode | Array<VNode> {
   if (isDef(data) && isDef((data: any).__ob__)) {
     process.env.NODE_ENV !== 'production' && warn(
@@ -87,9 +88,12 @@ export function _createElement (
     data.scopedSlots = { default: children[0] }
     children.length = 0
   }
+  //children 的规范化，children 变成了一个类型为 VNode 的 Array
+  //render 函数是用户编写的
   if (normalizationType === ALWAYS_NORMALIZE) {
     children = normalizeChildren(children)
   } else if (normalizationType === SIMPLE_NORMALIZE) {
+  //render 函数是由模板编译生成的
     children = simpleNormalizeChildren(children)
   }
   let vnode, ns
