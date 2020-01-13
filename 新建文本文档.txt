@@ -1,3 +1,6 @@
+绕过代码检查机制
+git commit --no-verify -m "commit"
+
 resolveConstructorOptions    4039
 
 createComponentInstanceForVnode  3503
